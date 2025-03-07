@@ -18,7 +18,10 @@ jobs:
         run: |
           COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/dev...staging"
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $COMPARE_URL)
-          AHEAD_BY=$(echo "$RESPONSE" | jq '.ahead_by')
+
+          echo "API RESPONSE: $RESPONSE"  # Debugging step
+
+          AHEAD_BY=$(echo "$RESPONSE" | jq '.ahead_by // 0')  # Handle null case
 
           if [ "$AHEAD_BY" -gt 0 ]; then
             echo "STAGING_AHEAD=true" >> $GITHUB_ENV
