@@ -1,0 +1,29 @@
+name: Check Staging Sync
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Repository Info
+        id: repo_info
+        run: echo "repo=${{ github.repository }}" >> $GITHUB_ENV
+
+      - name: Check if dev is behind staging
+        id: compare
+        run: |
+          COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/dev...staging"
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $COMPARE_URL)
+          AHEAD_BY=$(echo "$RESPONSE" | jq '.ahead_by')
+
+          if [ "$AHEAD_BY" -gt 0 ]; then
+            echo "STAGING_AHEAD=true" >> $GITHUB_ENV
+            echo "🚨 staging has changes that are not in dev!"
+          else
+            echo "STAGING_AHEAD=false" >> $GITHUB_ENV
+            echo "✅ staging and dev are in sync."
+          fi
