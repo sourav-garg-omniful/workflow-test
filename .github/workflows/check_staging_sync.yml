@@ -17,8 +17,8 @@ jobs:
         id: compare
         run: |
 
-          BASE_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/staging" | jq -r '.commit.sha')
-          HEAD_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/dev" | jq -r '.commit.sha')
+          BASE_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/dev" | jq -r '.commit.sha')
+          HEAD_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/staging" | jq -r '.commit.sha')
 
           COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/$BASE_COMMIT...$HEAD_COMMIT"
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $COMPARE_URL)
