@@ -62,6 +62,7 @@ jobs:
           echo "✅ Found Slack User ID: $USER_ID"
 
       - name: Send Slack Notification
+        if: env.STAGING_AHEAD == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_USER_ID: ${{ env.SLACK_USER_ID }}
