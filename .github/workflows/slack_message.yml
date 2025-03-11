@@ -10,11 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     environment: test
     steps:
+     - name: Fetch Slack User ID
+        run: |
+          SLACK_EMAIL="sourav.garg@omniful.ai"  # Replace with the email of the user to notify
+          SLACK_TOKEN="${{ secrets.SLACK_TOKEN }}"  # Secret from GitHub Secrets
+
+          RESPONSE=$(curl -s -X POST -H "Authorization: Bearer $SLACK_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "{\"email\": \"$SLACK_EMAIL\"}" \
+            https://slack.com/api/users.lookupByEmail)
+
+          USER_ID=$(echo "$RESPONSE" | jq -r '.user.id // empty')
+
+          if [ -z "$USER_ID" ]; then
+            echo "❌ Failed to find Slack user ID for $SLACK_EMAIL"
+            exit 1
+          fi
+
+          echo "SLACK_USER_ID=$USER_ID" >> $GITHUB_ENV
+          echo "✅ Found Slack User ID: $USER_ID"
       - name: Send Slack Notification
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          USER_NAME: "sourav.garg@omniful.ai"
+          USER_ID: ${{ env.USER_ID }}
         run: |
-          MESSAGE="🚨 *ALERT:* \`staging\` branch has changes that are not in \`dev\` as per the commit by <@${{ env.USER_NAME }}>. \nPlease merge them to dev branch as soon as possible!"
+          MESSAGE="🚨 *ALERT:* \`staging\` branch has changes that are not in \`dev\` as per the commit by <@${{ env.USER_ID }}>. \nPlease merge them to dev branch as soon as possible!"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$MESSAGE\"}" $SLACK_WEBHOOK_URL
           
