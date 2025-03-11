@@ -20,14 +20,14 @@ jobs:
           BASE_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/dev" | jq -r '.commit.sha')
           HEAD_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/staging" | jq -r '.commit.sha')
 
-          COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/$BASE_COMMIT...$HEAD_COMMIT"
+          COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/$BASE_COMMIT...$HEAD_COMMIT?expand=1"
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $COMPARE_URL)
 
           echo "API RESPONSE: $RESPONSE"  # Debugging step
 
-          AHEAD_BY=$(echo "$RESPONSE" | jq '.ahead_by // 0')  # Handle null case
+          CHANGES=$(echo "$RESPONSE" | jq '.files | length')  # Handle null case
 
-          if [ "$AHEAD_BY" -gt 0 ]; then
+          if [ "$CHANGES" -gt 0 ]; then
             echo "STAGING_AHEAD=true" >> $GITHUB_ENV
             echo "🚨 staging has changes that are not in dev!"
           else
