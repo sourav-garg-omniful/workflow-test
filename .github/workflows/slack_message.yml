@@ -1,0 +1,38 @@
+name: Check Slack Message
+
+on:
+  push:
+    branches:
+      - fbranch
+
+jobs:
+  send-slack-message:
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Fetch Slack User ID
+        run: |
+          SLACK_EMAIL="sourav.garg@omniful.ai"  # Replace with the email of the user to notify
+          SLACK_TOKEN="${{ secrets.SLACK_TOKEN }}"  # Secret from GitHub Secrets
+
+          RESPONSE=$(curl -s -H "Authorization: Bearer $SLACK_TOKEN" \
+            https://slack.com/api/users.lookupByEmail?email=$SLACK_EMAIL)
+
+          USER_ID=$(echo "$RESPONSE" | jq -r '.user.id // empty')
+
+          if [ -z "$USER_ID" ]; then
+            echo "❌ Failed to find Slack user ID for $SLACK_EMAIL"
+            exit 1
+          fi
+
+          echo "SLACK_USER_ID=$USER_ID" >> $GITHUB_ENV
+          echo "✅ Found Slack User ID: $USER_ID"
+
+      - name: Send Slack Notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_USER_ID: ${{ env.SLACK_USER_ID }}
+        run: |
+          MESSAGE="🚨 *ALERT:* \`staging\` branch has changes that are not in \`dev\` as per the commit by <@$SLACK_USER_ID>. \nPlease merge them to dev branch as soon as possible!"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$MESSAGE\"}" $SLACK_WEBHOOK_URL
+          
