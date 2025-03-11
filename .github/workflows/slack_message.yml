@@ -1,0 +1,25 @@
+name: Check Slack Message
+
+on:
+  push:
+    branches:
+      - fbranch
+
+jobs:
+  send-slack-message:
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Get Repository Info
+        id: repo_info
+        run: echo "repo=${{ github.repository }}" >> $GITHUB_ENV
+
+      - name: Send Slack Notification
+        if: env.STAGING_AHEAD == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          USER_NAME: "sourav.garg@omniful.ai"
+        run: |
+          MESSAGE="🚨 *ALERT:* \`staging\` branch has changes that are not in \`dev\` as per the commit by <@${{ env.USER_NAME }}>. \nPlease merge them to dev branch as soon as possible!"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$MESSAGE\"}" $SLACK_WEBHOOK_URL
+          
