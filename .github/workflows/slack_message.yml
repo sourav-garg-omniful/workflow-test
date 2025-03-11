@@ -10,12 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: test
     steps:
-      - name: Get Repository Info
-        id: repo_info
-        run: echo "repo=${{ github.repository }}" >> $GITHUB_ENV
-
       - name: Send Slack Notification
-        if: env.STAGING_AHEAD == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           USER_NAME: "sourav.garg@omniful.ai"
