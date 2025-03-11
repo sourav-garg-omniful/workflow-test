@@ -28,11 +28,28 @@ jobs:
           CHANGES=$(echo "$RESPONSE" | jq '.files | length')  # Handle null case
 
           if [ "$CHANGES" -gt 0 ]; then
+            USER_NAME=$(echo "$RESPONSE" | jq -r '.commits[-1].author.login')
+            USER_EMAIL=$(echo "$RESPONSE" | jq -r '.commits[-1].author.email')
+
             echo "STAGING_AHEAD=true" >> $GITHUB_ENV
+            echo "USER_NAME=$USER_NAME" >> $GITHUB_ENV
+            echo "USER_EMAIL=$USER_EMAIL" >> $GITHUB_ENV
+
             echo "🚨 staging has changes that are not in dev!"
+
+            echo "USER_NAME: $USER_NAME"
+            echo "USER_EMAIL: $USER_EMAIL"
+
+           
           else
             echo "STAGING_AHEAD=false" >> $GITHUB_ENV
             echo "✅ staging and dev are in sync."
           fi
-
+      - name: Send Slack Notification
+        if: env.STAGING_AHEAD == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          MESSAGE="🚨 *ALERT:* \`staging\` branch has changes that are not in \`dev\`. Please merge them!"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$MESSAGE\"}" $SLACK_WEBHOOK_URL
           
