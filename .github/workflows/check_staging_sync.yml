@@ -16,7 +16,11 @@ jobs:
       - name: Check if dev is behind staging
         id: compare
         run: |
-          COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/dev...staging"
+
+          BASE_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/staging" | jq -r '.commit.sha')
+          HEAD_COMMIT=$(curl -s "https://api.github.com/repos/${{ env.repo }}/branches/dev" | jq -r '.commit.sha')
+
+          COMPARE_URL="https://api.github.com/repos/${{ env.repo }}/compare/$BASE_COMMIT...$HEAD_COMMIT"
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $COMPARE_URL)
 
           echo "API RESPONSE: $RESPONSE"  # Debugging step
@@ -30,3 +34,5 @@ jobs:
             echo "STAGING_AHEAD=false" >> $GITHUB_ENV
             echo "✅ staging and dev are in sync."
           fi
+
+          
