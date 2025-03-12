@@ -67,6 +67,6 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_USER_ID: ${{ env.SLACK_USER_ID }}
         run: |
-          MESSAGE="🚨 *ALERT: `${{ env.repo }}`* \`staging\` branch has changes that are not in \`dev\` as per the commit by <@$SLACK_USER_ID>. \nPlease merge them to dev branch as soon as possible!"
+          MESSAGE="🚨 *ALERT: \`${{ env.repo }}\`* \`staging\` branch has changes that are not in \`dev\` as per the commit by <@$SLACK_USER_ID>. \nPlease merge them to dev branch as soon as possible!"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$MESSAGE\"}" $SLACK_WEBHOOK_URL
           echo "✅ Slack notification sent"
